@@ -1,6 +1,6 @@
 <x-layouts.app :title="__('Dashboard')">
     <div class="flex h-full w-full flex-1 flex-col gap-6 p-4">
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Personajes de Los Simpsons</h1>
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Personajes de Los Simpsons DAW2</h1>
 
         <div class="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             @foreach ($characters as $character)
