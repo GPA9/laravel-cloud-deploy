@@ -6,25 +6,26 @@ use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
-use App\Http\Controllers\Api\CharacterController; // Agregado para API Simpsons
+use App\Http\Controllers\Api\CharacterController; // API Simpsons
+use App\Http\Controllers\DashboardController; // DashboardController agregado
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Aquí van las rutas web de tu aplicación (Livewire, Fortify, etc.)
-|
 */
 
+// Página de inicio
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::view('dashboard', 'dashboard')
+// Dashboard usando controlador
+Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+// Configuración de usuario con Livewire y Fortify
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
@@ -46,12 +47,9 @@ Route::middleware(['auth'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| API Routes en Web (opcional)
+| API de Simpsons (web)
 |--------------------------------------------------------------------------
-|
-| Si quieres exponer tu API de Simpsons directamente desde web.php,
-| aunque lo recomendable es usar routes/api.php.
-|
+| Aunque lo recomendable es api.php, aquí funciona perfecto
 */
 
 // Listar todos los personajes
