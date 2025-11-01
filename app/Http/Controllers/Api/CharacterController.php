@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Character;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 
 class CharacterController extends Controller
 {
@@ -18,14 +17,14 @@ class CharacterController extends Controller
     }
 
     /**
-     * Importar personajes desde The Simpsons API y guardar imágenes localmente
+     * Importar personajes desde The Simpsons API (usando CDN)
      */
     public function import()
     {
         $response = Http::get('https://thesimpsonsapi.com/api/characters');
         $data = $response->json();
 
-        // Verificar estructura
+        // Verificar formato correcto
         if (!isset($data['results']) || !is_array($data['results'])) {
             return response()->json([
                 'error' => 'Formato inesperado de la API',
@@ -39,33 +38,11 @@ class CharacterController extends Controller
         foreach ($characters as $item) {
             if (!is_array($item) || empty($item['name'] ?? null)) continue;
 
-            // URL completa de la imagen
-            $imageUrl = isset($item['portrait_path'])
-                ? 'https://thesimpsonsapi.com' . $item['portrait_path']
+            // ✅ Usamos la URL CDN con tamaño 500px
+            $portraitUrl = isset($item['portrait_path'])
+                ? "https://cdn.thesimpsonsapi.com/500{$item['portrait_path']}"
                 : null;
 
-            $localImagePath = null;
-
-            // Descargar imagen y guardarla en storage/app/public/characters
-            if ($imageUrl) {
-                try {
-                    $imageContents = Http::get($imageUrl)->body();
-
-                    // Nombre del archivo, seguro para el sistema de archivos
-                    $fileName = str_replace(' ', '_', strtolower($item['name'])) . '.webp';
-
-                    // Guardar la imagen
-                    Storage::disk('public')->put('characters/' . $fileName, $imageContents);
-
-                    // Ruta pública
-                    $localImagePath = 'storage/characters/' . $fileName;
-                } catch (\Exception $e) {
-                    // Si falla la descarga, seguimos sin interrumpir el proceso
-                    $localImagePath = null;
-                }
-            }
-
-            // Guardar personaje en la base de datos
             Character::updateOrCreate(
                 ['name' => $item['name']],
                 [
@@ -73,7 +50,7 @@ class CharacterController extends Controller
                     'birthdate' => $item['birthdate'] ?? null,
                     'gender' => $item['gender'] ?? null,
                     'occupation' => $item['occupation'] ?? null,
-                    'portrait_path' => $localImagePath, // Guardamos la ruta local
+                    'portrait_path' => $portraitUrl,
                     'phrases' => json_encode($item['phrases'] ?? []),
                     'status' => $item['status'] ?? null,
                 ]
@@ -83,7 +60,7 @@ class CharacterController extends Controller
         }
 
         return response()->json([
-            'message' => "Se importaron {$count} personajes correctamente",
+            'message' => "Se importaron {$count} personajes correctamente usando el CDN",
             'total' => $count,
         ]);
     }
